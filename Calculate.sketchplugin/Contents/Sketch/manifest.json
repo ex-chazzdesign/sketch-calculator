@@ -1,0 +1,18 @@
+{
+    "name" : "Calculate",
+    "identifier" : "calculate",
+    "version" : "1.0",
+    "description" : "Calculate values from operations",
+    "authorEmail" : "diego.cano@chazzdesign.com",
+    "author" : "Diego Cano",
+
+    "commands" : [
+    {
+      "script" : "script.js",
+      "handler" : "calculate",
+      "shortcut" : "command shift c",
+      "name" : "Calculate values from operations",
+      "identifier" : "calculate.calculate"
+    }    
+  ],
+}
