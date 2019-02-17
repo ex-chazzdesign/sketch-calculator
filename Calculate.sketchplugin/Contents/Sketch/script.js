@@ -33,21 +33,40 @@ var processGroup = function(group) {
 
 var processLayer = function(layer) {  
 
-  var str = layer.name.substring(1, layer.name.length);  
   var artboard = layer.getParentArtboard();
+
+  var str = layer.name.substring(1, layer.name.length);  
 
   while(str.includes("{")) {
     var token = str.substring(str.indexOf("{")+1, str.indexOf("}"));
 
     // TO-DO: buscar solo en el mismo artboard, no en todo el documento
     var foundLayers = Sketch.getSelectedDocument().getLayersNamed(token);
+    var foundLayer = null;
 
     if (foundLayers.length == 0) {
       UI.message('No se ha encontrado '+token);
       layer.text = "ERR";
       return;
+    } else {  
+      for (var i=0; i<foundLayers.length; i++) {
+        var l = foundLayers[i];
+        if (l.getParentArtboard().id == artboard.id) {
+          foundLayer = l;
+        }        
+      }
+
+      if (foundLayer == null) {
+        UI.message('No se ha encontrado '+token);
+        layer.text = "ERR";
+        return;
+      }
+
+      // foundLayer = foundLayers[0];
+      //console.log(foundLayer);
     }
-    var value = foundLayers[0].text;
+
+    var value = foundLayer.text;
     str = str.substring(0,str.indexOf("{"))+value+str.substring(str.indexOf("}")+1,str.length);  
   }
 
