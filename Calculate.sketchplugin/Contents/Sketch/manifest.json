@@ -1,17 +1,17 @@
 {
-    "name" : "Calculate",
+    "name" : "Sketch Calculate",
     "identifier" : "calculate",
     "version" : "1.0",
-    "description" : "Calculate values from operations",
+    "description" : "Operations with text values",
     "authorEmail" : "diego.cano@chazzdesign.com",
-    "author" : "Diego Cano",
+    "author" : "Chazz Design",
 
     "commands" : [
     {
       "script" : "script.js",
       "handler" : "calculate",
       "shortcut" : "command shift c",
-      "name" : "Calculate values from operations",
+      "name" : "Calculate values for all labels",
       "identifier" : "calculate.calculate"
     }    
   ],
