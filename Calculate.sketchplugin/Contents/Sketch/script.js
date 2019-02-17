@@ -47,19 +47,24 @@ var processLayer = function(layer) {
       layer.text = "ERR";
       return;
     }
-    var value = foundLayers[0].text;    
+    var value = foundLayers[0].text;
     str = str.substring(0,str.indexOf("{"))+value+str.substring(str.indexOf("}")+1,str.length);  
   }
 
   var finalValue = "";
   try {
+    // Sustituimos "," por "." antes de pasarlo al eval
+    str = str.replace(/,/g,".");
+    console.log("Eval sobre "+str);
     finalValue = eval(str);
+
   } catch (e) {    
     UI.message('Error de sintaxis: '+str);
     layer.text = "ERR";
     return;    
   }
 
-  layer.text = finalValue+"";
+  finalValue = (finalValue+"").replace(".",",");
+  layer.text = finalValue;
   
 }
