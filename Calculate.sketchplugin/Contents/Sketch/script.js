@@ -45,7 +45,7 @@ var processLayer = function(layer) {
     var foundLayer = null;
 
     if (foundLayers.length == 0) {
-      UI.message('No se ha encontrado '+token);
+      UI.message(token+" not found :-(");
       layer.text = "ERR";
       return;
     } else {  
@@ -57,7 +57,7 @@ var processLayer = function(layer) {
       }
 
       if (foundLayer == null) {
-        UI.message('No se ha encontrado '+token);
+        UI.message(token+" not found :-(");
         layer.text = "ERR";
         return;
       }
@@ -73,12 +73,11 @@ var processLayer = function(layer) {
   var finalValue = "";
   try {
     // Sustituimos "," por "." antes de pasarlo al eval
-    str = str.replace(/,/g,".");
-    console.log("Eval sobre "+str);
+    str = str.replace(/,/g,".");    
     finalValue = eval(str);
 
   } catch (e) {    
-    UI.message('Error de sintaxis: '+str);
+    UI.message('Syntax error: '+str);
     layer.text = "ERR";
     return;    
   }
