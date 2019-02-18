@@ -49,7 +49,7 @@ let processLayer = function (layer) {
   let artboard = layer.getParentArtboard();
 
   let str = layer.name.substring(1);  
-  let calc = str
+  let calc = str;
 
   while ((m = REGEX_FIELDS.exec(str)) !== null) {
     // This is necessary to avoid infinite loops with zero-width matches
@@ -62,12 +62,13 @@ let processLayer = function (layer) {
 
     if (foundLayers && foundLayers.length) {
       let foundLayer = foundLayers[0];
-      let value = +foundLayer.text; // Transform text to number
+      let value = foundLayers[0].text;
       calc = calc.replace(new RegExp(m[0], 'g'), value);
     }
   }
 
-  try {
+  try {    
+    calc = calc.replace(/,/g,".");    
     let finalValue = eval(calc);
     finalValue = (finalValue + '').replace('.', ',');
     layer.text = finalValue;
@@ -82,7 +83,7 @@ let showError = function (layer, e) {
   return;
 }
 
-let changedText = function (context) {
+var changedText = function (context) {
   console.log('Text changed');
   calculate();
 }
