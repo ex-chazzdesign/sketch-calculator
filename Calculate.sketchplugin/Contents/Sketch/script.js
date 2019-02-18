@@ -41,6 +41,10 @@ let processGroup = function (group) {
   }
 }
 
+let searchLayersByName = function (name) {
+  return Sketch.getSelectedDocument().getLayersNamed(name);
+}
+
 let processLayer = function (layer) {
   let artboard = layer.getParentArtboard();
 
@@ -54,7 +58,7 @@ let processLayer = function (layer) {
     }
 
     let token = m[1] // This is: A1
-    let foundLayers = Sketch.getSelectedDocument().getLayersNamed(token);
+    let foundLayers = searchLayersByName(token);
 
     if (foundLayers && foundLayers.length) {
       let foundLayer = foundLayers[0];
