@@ -8,7 +8,7 @@ const TYPES = {
   GROUP: 'Group'
 } 
 
-function calculate (context) {
+let calculate function (context) {
 
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let layers = currentPage.layers;
@@ -25,7 +25,7 @@ function calculate (context) {
   }
 }
 
-function processGroup (group) {
+let processGroup = function (group) {
   let layers = group.layers;
 
   for (let i = 0; i < layers.length; i++) {
@@ -41,7 +41,7 @@ function processGroup (group) {
   }
 }
 
-function processLayer (layer) {
+let processLayer = function (layer) {
   let artboard = layer.getParentArtboard();
 
   let str = layer.name.substring(1, layer.name.length);  
@@ -72,13 +72,13 @@ function processLayer (layer) {
   }
 }
 
-function showError (layer, e) {
+let showError function (layer, e) {
   UI.message(`Syntax error: ${e}`);
   layer.text = '!ERR';
   return;
 }
 
-function changedText (context) {
+let changedText function (context) {
   console.log('Text changed');
   calculate();
 }
