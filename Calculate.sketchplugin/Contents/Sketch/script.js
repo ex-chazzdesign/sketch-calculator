@@ -86,3 +86,8 @@ var processLayer = function(layer) {
   layer.text = finalValue;
   
 }
+
+function changedText(context) {
+  console.log("Cambiado texto");
+  calculate();
+}
