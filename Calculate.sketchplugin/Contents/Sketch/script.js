@@ -44,7 +44,7 @@ let processGroup = function (group) {
 let processLayer = function (layer) {
   let artboard = layer.getParentArtboard();
 
-  let str = layer.name.substring(1, layer.name.length);  
+  let str = layer.name.substring(1);  
   let calc = str
 
   while ((m = REGEX_FIELDS.exec(str)) !== null) {
