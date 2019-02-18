@@ -68,3 +68,8 @@ var processLayer = function(layer) {
   finalValue = (finalValue + '').replace('.', ',');
   layer.text = finalValue;
 }
+
+function changedText(context) {
+  console.log("Cambiado texto");
+  calculate();
+}
