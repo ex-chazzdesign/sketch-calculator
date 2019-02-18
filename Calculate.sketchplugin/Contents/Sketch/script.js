@@ -8,7 +8,7 @@ const TYPES = {
   GROUP: 'Group'
 } 
 
-let calculate = function (context) {
+var calculate = function (context) {
 
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let layers = currentPage.layers;
