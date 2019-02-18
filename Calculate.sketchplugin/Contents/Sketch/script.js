@@ -8,7 +8,7 @@ const TYPES = {
   GROUP: 'Group'
 } 
 
-let calculate function (context) {
+let calculate = function (context) {
 
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let layers = currentPage.layers;
@@ -72,13 +72,13 @@ let processLayer = function (layer) {
   }
 }
 
-let showError function (layer, e) {
+let showError = function (layer, e) {
   UI.message(`Syntax error: ${e}`);
   layer.text = '!ERR';
   return;
 }
 
-let changedText function (context) {
+let changedText = function (context) {
   console.log('Text changed');
   calculate();
 }
