@@ -2,6 +2,8 @@ var Sketch = require('sketch');
 var UI = require('sketch/ui')
 var Artboard = require('sketch/dom').Artboard
 
+const REGEX_FIELDS = /\{([A-Z]\d{1,2})\}/gm;
+
 var calculate = function(context) {
 
   var currentPage = Sketch.getSelectedDocument().selectedPage;
@@ -31,60 +33,40 @@ var processGroup = function(group) {
   }
 }
 
-var processLayer = function(layer) {  
-
+var processLayer = function(layer) {
   var artboard = layer.getParentArtboard();
 
   var str = layer.name.substring(1, layer.name.length);  
+  var calc = str
 
-  while(str.includes("{")) {
-    var token = str.substring(str.indexOf("{")+1, str.indexOf("}"));
-
-    // TO-DO: buscar solo en el mismo artboard, no en todo el documento
-    var foundLayers = Sketch.getSelectedDocument().getLayersNamed(token);
-    var foundLayer = null;
-
-    if (foundLayers.length == 0) {
-      UI.message(token+" not found :-(");
-      layer.text = "ERR";
-      return;
-    } else {  
-      for (var i=0; i<foundLayers.length; i++) {
-        var l = foundLayers[i];
-        if (l.getParentArtboard().id == artboard.id) {
-          foundLayer = l;
-        }        
-      }
-
-      if (foundLayer == null) {
-        UI.message(token+" not found :-(");
-        layer.text = "ERR";
-        return;
-      }
-
-      // foundLayer = foundLayers[0];
-      //console.log(foundLayer);
+  while ((m = REGEX_FIELDS.exec(str)) !== null) {
+    // This is necessary to avoid infinite loops with zero-width matches
+    if (m.index === REGEX_FIELDS.lastIndex) {
+      REGEX_FIELDS.lastIndex++;
     }
 
-    var value = foundLayer.text;
-    str = str.substring(0,str.indexOf("{"))+value+str.substring(str.indexOf("}")+1,str.length);  
+    let token = m[1] // This is: A1
+    var foundLayers = Sketch.getSelectedDocument().getLayersNamed(token);
+
+    if (foundLayers && foundLayers.length) {
+      let foundLayer = foundLayers[0];
+      let value = +foundLayer.text; // Transform text to number
+      calc = calc.replace(new RegExp(m[0], 'g'), value);
+    }
   }
 
-  var finalValue = "";
+  let finalValue = "";
+
   try {
-    // Sustituimos "," por "." antes de pasarlo al eval
-    str = str.replace(/,/g,".");    
-    finalValue = eval(str);
-
+    finalValue = eval(calc);
   } catch (e) {    
-    UI.message('Syntax error: '+str);
+    UI.message('Syntax error: '+ str + e);
     layer.text = "ERR";
-    return;    
+    return;
   }
 
-  finalValue = (finalValue+"").replace(".",",");
+  finalValue = (finalValue + '').replace('.', ',');
   layer.text = finalValue;
-  
 }
 
 function changedText(context) {
