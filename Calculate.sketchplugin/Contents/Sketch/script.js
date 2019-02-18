@@ -2,7 +2,7 @@ let Sketch = require('sketch');
 let UI = require('sketch/ui')
 let Artboard = require('sketch/dom').Artboard
 
-const REGEX_FIELDS = /\{([A-Z]\d{1,2})\}/gm;
+const REGEX_FIELDS = /\{(.*?)\}/g;
 const TYPES = {
   ARTBOARD: 'Artboard',
   GROUP: 'Group'
