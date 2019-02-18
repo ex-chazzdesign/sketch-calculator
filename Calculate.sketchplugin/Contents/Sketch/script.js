@@ -1,16 +1,23 @@
-var Sketch = require('sketch');
-var UI = require('sketch/ui')
-var Artboard = require('sketch/dom').Artboard
+let Sketch = require('sketch');
+let UI = require('sketch/ui')
+let Artboard = require('sketch/dom').Artboard
 
 const REGEX_FIELDS = /\{([A-Z]\d{1,2})\}/gm;
+const TYPES = {
+  ARTBOARD: 'Artboard',
+  GROUP: 'Group'
+} 
 
-var calculate = function(context) {
+let calculate = function (context) {
 
-  var currentPage = Sketch.getSelectedDocument().selectedPage;
-  var layers = currentPage.layers;
-  for (var i=0; i < layers.length; i++) {
-    if (layers[i].type == 'Artboard') {      
-      processGroup(layers[i]);
+  let currentPage = Sketch.getSelectedDocument().selectedPage;
+  let layers = currentPage.layers;
+
+  for (let i = 0; i < layers.length; i++) {
+    let layer = layers[i];
+
+    if (layer.type === TYPES.ARTBOARD) {      
+      processGroup(layer);
     } else {      
       // Lo que no está en ningún artboard por ahora no lo procesamos
       // console.log(layers[i].name+" no es un artboard");
@@ -18,26 +25,31 @@ var calculate = function(context) {
   }
 }
 
-var processGroup = function(group) {
+let processGroup = function (group) {
+  let layers = group.layers;
 
-  var layers = group.layers;
-  for (var i=0; i < layers.length; i++) {
+  for (let i = 0; i < layers.length; i++) {
+    let layer = layers[i];
 
-    if (layers[i].type == 'Group'){
-      processGroup(layers[i]);      
+    if (layer.type === TYPES.GROUP){
+      processGroup(layer);      
     }
 
-    if (layers[i].name.startsWith("=")) {
-      processLayer(layers[i]);
+    if (layer.name.startsWith('=')) {
+      processLayer(layer);
     }
   }
 }
 
-var processLayer = function(layer) {
-  var artboard = layer.getParentArtboard();
+let searchLayersByName = function (name) {
+  return Sketch.getSelectedDocument().getLayersNamed(name);
+}
 
-  var str = layer.name.substring(1, layer.name.length);  
-  var calc = str
+let processLayer = function (layer) {
+  let artboard = layer.getParentArtboard();
+
+  let str = layer.name.substring(1);  
+  let calc = str
 
   while ((m = REGEX_FIELDS.exec(str)) !== null) {
     // This is necessary to avoid infinite loops with zero-width matches
@@ -46,7 +58,7 @@ var processLayer = function(layer) {
     }
 
     let token = m[1] // This is: A1
-    var foundLayers = Sketch.getSelectedDocument().getLayersNamed(token);
+    let foundLayers = searchLayersByName(token);
 
     if (foundLayers && foundLayers.length) {
       let foundLayer = foundLayers[0];
@@ -55,21 +67,22 @@ var processLayer = function(layer) {
     }
   }
 
-  let finalValue = "";
-
   try {
-    finalValue = eval(calc);
+    let finalValue = eval(calc);
+    finalValue = (finalValue + '').replace('.', ',');
+    layer.text = finalValue;
   } catch (e) {    
-    UI.message('Syntax error: '+ str + e);
-    layer.text = "ERR";
-    return;
+    showError(layer, e)
   }
-
-  finalValue = (finalValue + '').replace('.', ',');
-  layer.text = finalValue;
 }
 
-function changedText(context) {
-  console.log("Cambiado texto");
+let showError = function (layer, e) {
+  UI.message(`Syntax error: ${e}`);
+  layer.text = '!ERR';
+  return;
+}
+
+let changedText = function (context) {
+  console.log('Text changed');
   calculate();
 }
