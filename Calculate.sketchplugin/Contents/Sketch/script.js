@@ -87,17 +87,12 @@ let extractValues = function(variables) {
   return values;
 }
 
-
-let processLayer = function (layer) {
-  let artboard = layer.getParentArtboard();
-
-  let command = extractCommand(layer.name);
-  let variables = extractVariables(layer.name);
-  let values = extractValues(variables);
+let doCalculation = function (layer, values) {
   let str = layer.name.substring(1); 
 
   for (var i = 0; i < values.length; i++) {
-    str = str.replace(new RegExp(`\{${values.variable}\}`, 'g'), values.value);
+    let token = values[i];
+    str = str.replace(new RegExp(`\{${token.variable}\}`, 'g'), token.value);
   }
 
   try {
@@ -107,6 +102,20 @@ let processLayer = function (layer) {
     layer.text = finalValue;
   } catch (e) {    
     showError(layer, e)
+  }
+}
+
+let processLayer = function (layer) {
+  let artboard = layer.getParentArtboard();
+
+  let command = extractCommand(layer.name);
+  let variables = extractVariables(layer.name);
+  let values = extractValues(variables);
+
+  if (command) {
+    console.log(command);
+  } else {
+    doCalculation(layer, values);
   }
 }
 
@@ -120,3 +129,5 @@ var changedText = function (context) {
   console.log('Text changed');
   calculate();
 }
+
+//changedText()
