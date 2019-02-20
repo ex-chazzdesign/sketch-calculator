@@ -3,11 +3,15 @@ let UI = require('sketch/ui')
 let Artboard = require('sketch/dom').Artboard
 
 const REGEX_FIELDS = /\{(.*?)\}/g;
-const REGEX_COMMAND = /^=(.*?)\(.*?\)/g;
+const REGEX_COMMAND = /^=(.*?)\(.*?\)/;
 const TYPES = {
   ARTBOARD: 'Artboard',
   GROUP: 'Group'
 } 
+
+let searchLayersByName = function (name) {
+  return Sketch.getSelectedDocument().getLayersNamed(name);
+}
 
 var extractVariables = function(str) {
   let matches = []
@@ -25,7 +29,7 @@ var extractVariables = function(str) {
 }
 
 var extractCommand = function(str) {
-  let matches = REGEX_COMMAND.exec(str)
+  let matches = REGEX_COMMAND.exec(str);
 
   if (matches && matches.length === 2) {
     return matches[1]
@@ -67,10 +71,6 @@ let processGroup = function (group) {
   }
 }
 
-let searchLayersByName = function (name) {
-  return Sketch.getSelectedDocument().getLayersNamed(name);
-}
-
 let extractValues = function(variables) {
   let values = [];
 
@@ -88,12 +88,26 @@ let extractValues = function(variables) {
 }
 
 let doCommand = function (layer, command, values) {
+ let text = undefined;
+
   switch(command) {
     case 'CONCAT': {
       const reducer = (acc, value) => acc.value + ' ' +  value.value;
-      layer.text = values.reduce(reducer)
+      text = values.reduce(reducer);
       break;
     }
+    case 'UPPER': {
+      text = values[0].value.toUpperCase();
+      break;
+    }
+    case 'LOWER': {
+      text = values[0].value.toLowerCase();
+      break;
+    }
+  }
+
+  if (text) {
+    layer.text = text
   }
 }
 
@@ -117,8 +131,10 @@ let doCalculation = function (layer, values) {
 let processLayer = function (layer) {
   let artboard = layer.getParentArtboard();
   let command = extractCommand(layer.name);
+
   let variables = extractVariables(layer.name);
   let values = extractValues(variables);
+
 
   if (command) {
     doCommand(layer, command, values)
@@ -137,3 +153,4 @@ var changedText = function (context) {
   console.log('Text changed');
   calculate();
 }
+
