@@ -87,6 +87,16 @@ let extractValues = function(variables) {
   return values;
 }
 
+let doCommand = function (layer, command, values) {
+  switch(command) {
+    case 'CONCAT': {
+      const reducer = (acc, value) => acc.value + ' ' +  value.value;
+      layer.text = values.reduce(reducer)
+      break;
+    }
+  }
+}
+
 let doCalculation = function (layer, values) {
   let str = layer.name.substring(1); 
 
@@ -98,8 +108,7 @@ let doCalculation = function (layer, values) {
   try {
     str = str.replace(/,/g, '.');    
     let finalValue = eval(str);
-    finalValue = (finalValue + '').replace('.', ',');
-    layer.text = finalValue;
+    layer.text = (finalValue + '').replace('.', ',');
   } catch (e) {    
     showError(layer, e)
   }
@@ -107,13 +116,12 @@ let doCalculation = function (layer, values) {
 
 let processLayer = function (layer) {
   let artboard = layer.getParentArtboard();
-
   let command = extractCommand(layer.name);
   let variables = extractVariables(layer.name);
   let values = extractValues(variables);
 
   if (command) {
-    console.log(command);
+    doCommand(layer, command, values)
   } else {
     doCalculation(layer, values);
   }
@@ -129,5 +137,3 @@ var changedText = function (context) {
   console.log('Text changed');
   calculate();
 }
-
-//changedText()
