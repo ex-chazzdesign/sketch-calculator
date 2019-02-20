@@ -62,7 +62,7 @@ let processGroup = function (group) {
     let layer = layers[i];
 
     if (layer.type === TYPES.GROUP){
-      processGroup(layer);      
+      processGroup(layer);
     }
 
     if (layer.name.startsWith('=')) {
@@ -92,8 +92,7 @@ let doCommand = function (layer, command, values) {
 
   switch(command) {
     case 'CONCAT': {
-      const reducer = (acc, value) => acc.value + ' ' +  value.value;
-      text = values.reduce(reducer);
+      text = values.map((v) =>  v.value).join(' ');
       break;
     }
     case 'UPPER': {
@@ -135,7 +134,6 @@ let processLayer = function (layer) {
   let variables = extractVariables(layer.name);
   let values = extractValues(variables);
 
-
   if (command) {
     doCommand(layer, command, values)
   } else {
@@ -153,4 +151,3 @@ var changedText = function (context) {
   console.log('Text changed');
   calculate();
 }
-
