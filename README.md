@@ -16,7 +16,7 @@ You can also use other arithmetic operations. Try creating the following:
 2. ={layer_1}-{layer_2}
 3. ={layer_1}+100*{layer_2}/2
 
-You can also simply reference other field. That's useful, for example, when you need to define a value in a single place of the document:
+You can also simply reference other field. That's useful, for example, when you need to define a value in a single place of and use it along the document:
 1. ={layer_1}
 
 ## String operations
