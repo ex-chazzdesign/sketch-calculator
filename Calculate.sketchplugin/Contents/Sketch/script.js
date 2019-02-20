@@ -3,10 +3,36 @@ let UI = require('sketch/ui')
 let Artboard = require('sketch/dom').Artboard
 
 const REGEX_FIELDS = /\{(.*?)\}/g;
+const REGEX_COMMAND = /^=(.*?)\(.*?\)/g;
 const TYPES = {
   ARTBOARD: 'Artboard',
   GROUP: 'Group'
 } 
+
+var extractVariables = function(str) {
+  let matches = []
+
+  while ((m = REGEX_FIELDS.exec(str)) !== null) {
+
+    if (m.index === REGEX_FIELDS.lastIndex) {
+      REGEX_FIELDS.lastIndex++;
+    }
+
+    matches.push(m[1])
+  }
+
+  return matches
+}
+
+var extractCommand = function(str) {
+  let matches = REGEX_COMMAND.exec(str)
+
+  if (matches && matches.length === 2) {
+    return matches[1]
+  }
+
+  return undefined
+}
 
 var calculate = function (context) {
 
@@ -18,7 +44,7 @@ var calculate = function (context) {
 
     if (layer.type === TYPES.ARTBOARD) {      
       processGroup(layer);
-    } else {      
+    } else {
       // Lo que no está en ningún artboard por ahora no lo procesamos
       // console.log(layers[i].name+" no es un artboard");
     }
@@ -45,31 +71,38 @@ let searchLayersByName = function (name) {
   return Sketch.getSelectedDocument().getLayersNamed(name);
 }
 
-let processLayer = function (layer) {
-  let artboard = layer.getParentArtboard();
+let extractValues = function(variables) {
+  let values = [];
 
-  let str = layer.name.substring(1);  
-  let calc = str;
+  for (var i = 0; i < variables.length; i++) {
+    let variable = variables[i];
+    let foundLayers = searchLayersByName(variable);
 
-  while ((m = REGEX_FIELDS.exec(str)) !== null) {
-    // This is necessary to avoid infinite loops with zero-width matches
-    if (m.index === REGEX_FIELDS.lastIndex) {
-      REGEX_FIELDS.lastIndex++;
-    }
-
-    let token = m[1] // This is: A1
-    let foundLayers = searchLayersByName(token);
-
-    if (foundLayers && foundLayers.length) {
-      let foundLayer = foundLayers[0];
+    if (foundLayers && foundLayers[0]) {
       let value = foundLayers[0].text;
-      calc = calc.replace(new RegExp(m[0], 'g'), value);
+      values.push({ variable, value });
     }
   }
 
-  try {    
-    calc = calc.replace(/,/g,".");    
-    let finalValue = eval(calc);
+  return values;
+}
+
+
+let processLayer = function (layer) {
+  let artboard = layer.getParentArtboard();
+
+  let command = extractCommand(layer.name);
+  let variables = extractVariables(layer.name);
+  let values = extractValues(variables);
+  let str = layer.name.substring(1); 
+
+  for (var i = 0; i < values.length; i++) {
+    str = str.replace(new RegExp(`\{${values.variable}\}`, 'g'), values.value);
+  }
+
+  try {
+    str = str.replace(/,/g, '.');    
+    let finalValue = eval(str);
     finalValue = (finalValue + '').replace('.', ',');
     layer.text = finalValue;
   } catch (e) {    
