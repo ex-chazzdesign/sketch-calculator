@@ -46,6 +46,8 @@ let searchLayersByName = function (name) {
 }
 
 let processLayer = function (layer) {
+
+  console.log("Procesando "+layer.name);
   let artboard = layer.getParentArtboard();
 
   let str = layer.name.substring(1);  
@@ -84,6 +86,28 @@ let showError = function (layer, e) {
 }
 
 var changedText = function (context) {
-  console.log('Text changed');
-  calculate();
+  
+  let layerName = Sketch.fromNative(context.actionContext.layer).name;
+  let currentPage = Sketch.getSelectedDocument().selectedPage;
+  let foundLayers = deepSearch(currentPage.layers, "{"+layerName+"}");
+  for (let i=0; i<foundLayers.length; i++) {
+    processLayer(foundLayers[i]);
+  }
+
 }
+
+var deepSearch = function(layers, string) {
+  let foundLayers = [];
+  for (let i=0; i<layers.length; i++) {    
+    let currentLayer = layers[i];
+    if ((currentLayer.type === TYPES.GROUP)||(currentLayer.type === TYPES.ARTBOARD)){
+      foundLayers = foundLayers.concat(deepSearch(currentLayer.layers, string));
+    } else {
+      if (currentLayer.name.includes(string)) {
+        foundLayers.push(currentLayer);
+      }
+    }    
+  }
+  return foundLayers;
+}
+
