@@ -2,8 +2,10 @@ let Sketch = require('sketch');
 let UI = require('sketch/ui')
 let Artboard = require('sketch/dom').Artboard
 
-const REGEX_FIELDS = /\{(.*?)\}/g;
-const REGEX_COMMAND = /^=(.*?)\(.*?\)/;
+const REGEX = {
+  FIELDS: /\{(.*?)\}/g,
+  COMMAND: /^=(.*?)\(.*?\)/
+}
 
 const COMMANDS = {
   CONCAT: 'CONCAT',
@@ -44,10 +46,10 @@ let searchLayersByName = function (name, artboard) {
 let extractVariables = function(str) {
   let matches = []
 
-  while ((m = REGEX_FIELDS.exec(str)) !== null) {
+  while ((m = REGEX.FIELDS.exec(str)) !== null) {
 
-    if (m.index === REGEX_FIELDS.lastIndex) {
-      REGEX_FIELDS.lastIndex++;
+    if (m.index === REGEX.FIELDS.lastIndex) {
+      REGEX.FIELDS.lastIndex++;
     }
 
     matches.push(m[1])
@@ -57,7 +59,7 @@ let extractVariables = function(str) {
 }
 
 let extractCommand = function(str) {
-  let matches = REGEX_COMMAND.exec(str);
+  let matches = REGEX.COMMAND.exec(str);
 
   if (matches && matches.length === 2) {
     return matches[1]
@@ -149,8 +151,6 @@ let doCalculation = function (layer, values) {
 
   try {
     result = str.replace(/,/g, '.');
-    console.log(result)
-
     layer.text = eval(result).toString().replace('.', ',');
   } catch (e) {    
     showError(layer, e)
