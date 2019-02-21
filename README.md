@@ -39,4 +39,3 @@ The plugin also support a number of operation with strings:
 
 1. For the moment the plugin only works with "," as decimal separator.
 2. We haven't done any performance optimization yet, so it might be slow in complex documents.
-3. Currently the plugin only searches layer names in the same artboard.
