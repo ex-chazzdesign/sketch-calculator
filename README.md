@@ -12,12 +12,12 @@ Let's learn how it works with a simple example:
 4. Now, change the value of layer_1 or layer_2. The last layer should be automatically recalculated.
 
 You can also use other arithmetic operations. Try creating the following:
-1. ={layer_1}*2
-2. ={layer_1}-{layer_2}
-3. ={layer_1}+100*{layer_2}/2
+1. `={layer_1}*2`
+2. `={layer_1}-{layer_2}`
+3. `={layer_1}+100*{layer_2}/2`
 
 You can also simply reference other field. That's useful, for example, when you need to define a value in a single place of and use it along the document:
-1. ={layer_1}
+1. `={layer_1}`
 
 ## String operations
 
