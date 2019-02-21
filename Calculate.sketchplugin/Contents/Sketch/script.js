@@ -4,8 +4,10 @@ let Artboard = require('sketch/dom').Artboard
 
 const REGEX = {
   FIELDS: /\{(.*?)\}/g,
-  COMMAND: /^=(.*?)\(.*?\)/
+  COMMAND: /^=(.*?)\(.*?\)/  
 }
+
+const EVAL_WHITELIST  = '()1234567890+/*-';
 
 const COMMANDS = {
   CONCAT: 'CONCAT',
@@ -149,12 +151,26 @@ let doCalculation = function (layer, values) {
     str = str.replace(`{${token.variable}}`, token.value);
   }
 
+  if (!whitelist(str)) {
+    showError(layer, "Sorry, invalid character in formula :-(");
+    return;
+  }
+
   try {
     result = str.replace(/,/g, '.');
     layer.text = eval(result).toString().replace('.', ',');
   } catch (e) {    
     showError(layer, e)
   }
+}
+
+let whitelist = function(value) {
+  for (let i=0; i<value.length; i++) {
+    if (! EVAL_WHITELIST.includes(value[i])) {
+      return false;
+    }
+  }
+  return true;
 }
 
 let processLayer = function (layer) {
@@ -181,7 +197,6 @@ var changedText = function (currentContext) {
   let layerName = Sketch.fromNative(currentContext.actionContext.layer).name;
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
-
   foundLayers = foundLayers.concat(deepSearch(currentPage.layers, `{*${layerName}}`));
 
   for (let i = 0; i < foundLayers.length; i++) {
