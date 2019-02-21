@@ -4,16 +4,23 @@ let Artboard = require('sketch/dom').Artboard
 
 const REGEX_FIELDS = /\{(.*?)\}/g;
 const REGEX_COMMAND = /^=(.*?)\(.*?\)/;
+
+const COMMANDS = {
+  CONCAT: 'CONCAT',
+  UPPER: 'UPPER',
+  LOWER: 'LOWER'
+}
+
 const TYPES = {
   ARTBOARD: 'Artboard',
   GROUP: 'Group'
-} 
+}
 
 let searchLayersByName = function (name) {
   return Sketch.getSelectedDocument().getLayersNamed(name);
 }
 
-var extractVariables = function(str) {
+let extractVariables = function(str) {
   let matches = []
 
   while ((m = REGEX_FIELDS.exec(str)) !== null) {
@@ -28,7 +35,7 @@ var extractVariables = function(str) {
   return matches
 }
 
-var extractCommand = function(str) {
+let extractCommand = function(str) {
   let matches = REGEX_COMMAND.exec(str);
 
   if (matches && matches.length === 2) {
@@ -38,7 +45,7 @@ var extractCommand = function(str) {
   return undefined
 }
 
-var calculate = function (context) {
+var calculate = function () {
 
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let layers = currentPage.layers;
@@ -74,7 +81,7 @@ let processGroup = function (group) {
 let extractValues = function(variables) {
   let values = [];
 
-  for (var i = 0; i < variables.length; i++) {
+  for (let i = 0; i < variables.length; i++) {
     let variable = variables[i];
     let foundLayers = searchLayersByName(variable);
 
@@ -88,18 +95,18 @@ let extractValues = function(variables) {
 }
 
 let doCommand = function (layer, command, values) {
- let text = undefined;
+  let text = undefined;
 
   switch(command) {
-    case 'CONCAT': {
+    case COMMANDS.CONCAT: {
       text = values.map((v) =>  v.value).join(' ');
       break;
     }
-    case 'UPPER': {
+    case COMMANDS.UPPER: {
       text = values[0].value.toUpperCase();
       break;
     }
-    case 'LOWER': {
+    case COMMANDS.LOWER: {
       text = values[0].value.toLowerCase();
       break;
     }
@@ -113,15 +120,14 @@ let doCommand = function (layer, command, values) {
 let doCalculation = function (layer, values) {
   let str = layer.name.substring(1); 
 
-  for (var i = 0; i < values.length; i++) {
+  for (let i = 0; i < values.length; i++) {
     let token = values[i];
     str = str.replace(new RegExp(`\{${token.variable}\}`, 'g'), token.value);
   }
 
   try {
-    str = str.replace(/,/g, '.');    
-    let finalValue = eval(str);
-    layer.text = (finalValue + '').replace('.', ',');
+    result = str.replace(/,/g, '.');
+    layer.text = eval(result).toString().replace('.', ',');
   } catch (e) {    
     showError(layer, e)
   }
@@ -147,7 +153,30 @@ let showError = function (layer, e) {
   return;
 }
 
-var changedText = function (context) {
-  console.log('Text changed');
-  calculate();
+var changedText = function (currentContext) {
+  let layerName = Sketch.fromNative(currentContext.actionContext.layer).name;
+  let currentPage = Sketch.getSelectedDocument().selectedPage;
+  let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
+
+  for (let i = 0; i < foundLayers.length; i++) {
+    processLayer(foundLayers[i]);
+  }
 }
+
+let deepSearch = function(layers, string) {
+  let foundLayers = [];
+
+  for (let i = 0; i < layers.length; i++) {
+    let currentLayer = layers[i];
+
+    if (currentLayer.type === TYPES.GROUP ||currentLayer.type === TYPES.ARTBOARD){
+      foundLayers = foundLayers.concat(deepSearch(currentLayer.layers, string));
+    } else if (currentLayer.name.includes(string)) {
+      foundLayers.push(currentLayer);
+    }
+  }
+
+  return foundLayers;
+}
+
+calculate()
