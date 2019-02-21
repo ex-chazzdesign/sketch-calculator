@@ -16,8 +16,29 @@ const TYPES = {
   GROUP: 'Group'
 }
 
-let searchLayersByName = function (name) {
-  return Sketch.getSelectedDocument().getLayersNamed(name);
+let searchLayersByName = function (name, artboard) {
+  let local = true;
+
+  if (name.startsWith('*')) {
+    name = name.substring(1);
+    local = false;
+  }
+
+  let foundLayers = Sketch.getSelectedDocument().getLayersNamed(name);
+
+  let result = [];
+
+  if (local) {
+    for (let i = 0; i<foundLayers.length; i++) {
+      if (foundLayers[i].getParentArtboard().id === artboard.id) {
+        result.push(foundLayers[i]);
+      }
+    }
+  } else {
+    result = foundLayers;
+  }
+
+  return result;
 }
 
 let extractVariables = function(str) {
@@ -78,12 +99,12 @@ let processGroup = function (group) {
   }
 }
 
-let extractValues = function(variables) {
+let extractValues = function(variables, artboard) {
   let values = [];
 
   for (let i = 0; i < variables.length; i++) {
     let variable = variables[i];
-    let foundLayers = searchLayersByName(variable);
+    let foundLayers = searchLayersByName(variable, artboard);
 
     if (foundLayers && foundLayers[0]) {
       let value = foundLayers[0].text;
@@ -99,7 +120,7 @@ let doCommand = function (layer, command, values) {
 
   switch(command) {
     case COMMANDS.CONCAT: {
-      text = values.map((v) =>  v.value).join(' ');
+      text = values.map((v) => v.value).join(' ');
       break;
     }
     case COMMANDS.UPPER: {
@@ -122,11 +143,14 @@ let doCalculation = function (layer, values) {
 
   for (let i = 0; i < values.length; i++) {
     let token = values[i];
-    str = str.replace(new RegExp(`\{${token.variable}\}`, 'g'), token.value);
+
+    str = str.replace(`{${token.variable}}`, token.value);
   }
 
   try {
     result = str.replace(/,/g, '.');
+    console.log(result)
+
     layer.text = eval(result).toString().replace('.', ',');
   } catch (e) {    
     showError(layer, e)
@@ -138,7 +162,7 @@ let processLayer = function (layer) {
   let command = extractCommand(layer.name);
 
   let variables = extractVariables(layer.name);
-  let values = extractValues(variables);
+  let values = extractValues(variables, artboard);
 
   if (command) {
     doCommand(layer, command, values)
@@ -158,20 +182,22 @@ var changedText = function (currentContext) {
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
 
+  foundLayers = foundLayers.concat(deepSearch(currentPage.layers, `{*${layerName}}`));
+
   for (let i = 0; i < foundLayers.length; i++) {
     processLayer(foundLayers[i]);
   }
 }
 
-let deepSearch = function(layers, string) {
+let deepSearch = function(layers, layerName) {
   let foundLayers = [];
 
   for (let i = 0; i < layers.length; i++) {
     let currentLayer = layers[i];
 
     if (currentLayer.type === TYPES.GROUP ||currentLayer.type === TYPES.ARTBOARD){
-      foundLayers = foundLayers.concat(deepSearch(currentLayer.layers, string));
-    } else if (currentLayer.name.includes(string)) {
+      foundLayers = foundLayers.concat(deepSearch(currentLayer.layers, layerName));
+    } else if (currentLayer.name.includes(layerName)) {
       foundLayers.push(currentLayer);
     }
   }
@@ -179,4 +205,7 @@ let deepSearch = function(layers, string) {
   return foundLayers;
 }
 
-calculate()
+var changedName = function () {
+  console.log('Name changed!');
+  calculate();
+}
