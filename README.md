@@ -21,6 +21,17 @@ You can also simply reference other field. That's useful, for example, when you 
 
 ## String operations
 
+The plugin also support a number of operation with strings:
+
+### Concatenation of strings
+`=CONCAT({layer_1}, {*layer_2}, {layer_3})`
+
+### Uppercase
+`=UPPER({layer_1})`
+
+### Lowercase
+`=LOWER({layer_1})`
+
 # Caveats
 
 1. For the moment the plugin only works with "," as decimal separator.
