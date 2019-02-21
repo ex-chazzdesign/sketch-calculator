@@ -41,15 +41,35 @@ let processGroup = function (group) {
   }
 }
 
-let searchLayersByName = function (name) {
-  return Sketch.getSelectedDocument().getLayersNamed(name);
+let searchLayersByName = function (name, artboard) {
+
+  var local = true;
+  if (name.startsWith('*')) {
+    name = name.substring(1);
+    local = false;
+  }
+
+  // Primero busco todos los layers con ese nombre
+  let foundLayers = Sketch.getSelectedDocument().getLayersNamed(name);
+  
+  let result = [];
+  if (local) {
+    for (var i=0; i<foundLayers.length; i++) {
+      // Recorro y pillo solo los que pertenecen al mismo artboard
+      if (foundLayers[i].getParentArtboard().id == artboard.id) {
+        result.push(foundLayers[i]);
+      }
+    }
+  } else {
+    result = foundLayers;
+  }
+
+  return result;
 }
 
 let processLayer = function (layer) {
 
-  console.log("Procesando "+layer.name);
   let artboard = layer.getParentArtboard();
-
   let str = layer.name.substring(1);  
   let calc = str;
 
@@ -60,16 +80,17 @@ let processLayer = function (layer) {
     }
 
     let token = m[1] // This is: A1
-    let foundLayers = searchLayersByName(token);
+    let foundLayers = searchLayersByName(token, artboard);
 
     if (foundLayers && foundLayers.length) {
       let foundLayer = foundLayers[0];
       let value = foundLayers[0].text;
-      calc = calc.replace(new RegExp(m[0], 'g'), value);
+      //calc = calc.replace(new RegExp(m[0], 'g'), value); // Me estaba dando problemas con el '*'
+      calc = calc.replace(m[0], value);
     }
   }
 
-  try {    
+  try {
     calc = calc.replace(/,/g,".");    
     let finalValue = eval(calc);
     finalValue = (finalValue + '').replace('.', ',');
@@ -85,11 +106,17 @@ let showError = function (layer, e) {
   return;
 }
 
+var changedName = function (context) {
+  console.log("Changed name!");
+  calculate();
+}
+
 var changedText = function (context) {
   
   let layerName = Sketch.fromNative(context.actionContext.layer).name;
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let foundLayers = deepSearch(currentPage.layers, "{"+layerName+"}");
+  foundLayers = foundLayers.concat(deepSearch(currentPage.layers, "{*"+layerName+"}")); // Uh
   for (let i=0; i<foundLayers.length; i++) {
     processLayer(foundLayers[i]);
   }
