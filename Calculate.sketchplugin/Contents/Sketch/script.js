@@ -3,12 +3,70 @@ let UI = require('sketch/ui')
 let Artboard = require('sketch/dom').Artboard
 
 const REGEX_FIELDS = /\{(.*?)\}/g;
+const REGEX_COMMAND = /^=(.*?)\(.*?\)/;
+
+const COMMANDS = {
+  CONCAT: 'CONCAT',
+  UPPER: 'UPPER',
+  LOWER: 'LOWER'
+}
+
 const TYPES = {
   ARTBOARD: 'Artboard',
   GROUP: 'Group'
-} 
+}
 
-var calculate = function (context) {
+let searchLayersByName = function (name, artboard) {
+  let local = true;
+
+  if (name.startsWith('*')) {
+    name = name.substring(1);
+    local = false;
+  }
+
+  let foundLayers = Sketch.getSelectedDocument().getLayersNamed(name);
+
+  let result = [];
+
+  if (local) {
+    for (let i = 0; i<foundLayers.length; i++) {
+      if (foundLayers[i].getParentArtboard().id === artboard.id) {
+        result.push(foundLayers[i]);
+      }
+    }
+  } else {
+    result = foundLayers;
+  }
+
+  return result;
+}
+
+let extractVariables = function(str) {
+  let matches = []
+
+  while ((m = REGEX_FIELDS.exec(str)) !== null) {
+
+    if (m.index === REGEX_FIELDS.lastIndex) {
+      REGEX_FIELDS.lastIndex++;
+    }
+
+    matches.push(m[1])
+  }
+
+  return matches
+}
+
+let extractCommand = function(str) {
+  let matches = REGEX_COMMAND.exec(str);
+
+  if (matches && matches.length === 2) {
+    return matches[1]
+  }
+
+  return undefined
+}
+
+var calculate = function () {
 
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let layers = currentPage.layers;
@@ -18,7 +76,7 @@ var calculate = function (context) {
 
     if (layer.type === TYPES.ARTBOARD) {      
       processGroup(layer);
-    } else {      
+    } else {
       // Lo que no está en ningún artboard por ahora no lo procesamos
       // console.log(layers[i].name+" no es un artboard");
     }
@@ -32,7 +90,7 @@ let processGroup = function (group) {
     let layer = layers[i];
 
     if (layer.type === TYPES.GROUP){
-      processGroup(layer);      
+      processGroup(layer);
     }
 
     if (layer.name.startsWith('=')) {
@@ -41,62 +99,75 @@ let processGroup = function (group) {
   }
 }
 
-let searchLayersByName = function (name, artboard) {
+let extractValues = function(variables, artboard) {
+  let values = [];
 
-  var local = true;
-  if (name.startsWith('*')) {
-    name = name.substring(1);
-    local = false;
-  }
+  for (let i = 0; i < variables.length; i++) {
+    let variable = variables[i];
+    let foundLayers = searchLayersByName(variable, artboard);
 
-  // Primero busco todos los layers con ese nombre
-  let foundLayers = Sketch.getSelectedDocument().getLayersNamed(name);
-  
-  let result = [];
-  if (local) {
-    for (var i=0; i<foundLayers.length; i++) {
-      // Recorro y pillo solo los que pertenecen al mismo artboard
-      if (foundLayers[i].getParentArtboard().id == artboard.id) {
-        result.push(foundLayers[i]);
-      }
+    if (foundLayers && foundLayers[0]) {
+      let value = foundLayers[0].text;
+      values.push({ variable, value });
     }
-  } else {
-    result = foundLayers;
   }
 
-  return result;
+  return values;
 }
 
-let processLayer = function (layer) {
+let doCommand = function (layer, command, values) {
+  let text = undefined;
 
-  let artboard = layer.getParentArtboard();
-  let str = layer.name.substring(1);  
-  let calc = str;
-
-  while ((m = REGEX_FIELDS.exec(str)) !== null) {
-    // This is necessary to avoid infinite loops with zero-width matches
-    if (m.index === REGEX_FIELDS.lastIndex) {
-      REGEX_FIELDS.lastIndex++;
+  switch(command) {
+    case COMMANDS.CONCAT: {
+      text = values.map((v) => v.value).join(' ');
+      break;
     }
-
-    let token = m[1] // This is: A1
-    let foundLayers = searchLayersByName(token, artboard);
-
-    if (foundLayers && foundLayers.length) {
-      let foundLayer = foundLayers[0];
-      let value = foundLayers[0].text;
-      //calc = calc.replace(new RegExp(m[0], 'g'), value); // Me estaba dando problemas con el '*'
-      calc = calc.replace(m[0], value);
+    case COMMANDS.UPPER: {
+      text = values[0].value.toUpperCase();
+      break;
     }
+    case COMMANDS.LOWER: {
+      text = values[0].value.toLowerCase();
+      break;
+    }
+  }
+
+  if (text) {
+    layer.text = text
+  }
+}
+
+let doCalculation = function (layer, values) {
+  let str = layer.name.substring(1); 
+
+  for (let i = 0; i < values.length; i++) {
+    let token = values[i];
+
+    str = str.replace(`{${token.variable}}`, token.value);
   }
 
   try {
-    calc = calc.replace(/,/g,".");    
-    let finalValue = eval(calc);
-    finalValue = (finalValue + '').replace('.', ',');
-    layer.text = finalValue;
+    result = str.replace(/,/g, '.');
+    console.log(result)
+
+    layer.text = eval(result).toString().replace('.', ',');
   } catch (e) {    
     showError(layer, e)
+  }
+}
+
+let processLayer = function (layer) {
+  let artboard = layer.getParentArtboard();
+  let command = extractCommand(layer.name);
+
+  let variables = extractVariables(layer.name);
+  let values = extractValues(variables, artboard);
+
+  if (command) {
+    doCommand(layer, command, values)
+  } else {
+    doCalculation(layer, values);
   }
 }
 
@@ -106,35 +177,35 @@ let showError = function (layer, e) {
   return;
 }
 
-var changedName = function (context) {
-  console.log("Changed name!");
-  calculate();
-}
-
-var changedText = function (context) {
-  
-  let layerName = Sketch.fromNative(context.actionContext.layer).name;
+var changedText = function (currentContext) {
+  let layerName = Sketch.fromNative(currentContext.actionContext.layer).name;
   let currentPage = Sketch.getSelectedDocument().selectedPage;
-  let foundLayers = deepSearch(currentPage.layers, "{"+layerName+"}");
-  foundLayers = foundLayers.concat(deepSearch(currentPage.layers, "{*"+layerName+"}")); // Uh
-  for (let i=0; i<foundLayers.length; i++) {
+  let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
+
+  foundLayers = foundLayers.concat(deepSearch(currentPage.layers, `{*${layerName}}`));
+
+  for (let i = 0; i < foundLayers.length; i++) {
     processLayer(foundLayers[i]);
   }
-
 }
 
-var deepSearch = function(layers, string) {
+let deepSearch = function(layers, layerName) {
   let foundLayers = [];
-  for (let i=0; i<layers.length; i++) {    
+
+  for (let i = 0; i < layers.length; i++) {
     let currentLayer = layers[i];
-    if ((currentLayer.type === TYPES.GROUP)||(currentLayer.type === TYPES.ARTBOARD)){
-      foundLayers = foundLayers.concat(deepSearch(currentLayer.layers, string));
-    } else {
-      if (currentLayer.name.includes(string)) {
-        foundLayers.push(currentLayer);
-      }
-    }    
+
+    if (currentLayer.type === TYPES.GROUP ||currentLayer.type === TYPES.ARTBOARD){
+      foundLayers = foundLayers.concat(deepSearch(currentLayer.layers, layerName));
+    } else if (currentLayer.name.includes(layerName)) {
+      foundLayers.push(currentLayer);
+    }
   }
+
   return foundLayers;
 }
 
+var changedName = function () {
+  console.log('Name changed!');
+  calculate();
+}
