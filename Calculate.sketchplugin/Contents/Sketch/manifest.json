@@ -1,18 +1,38 @@
 {
-    "name" : "Sketch Calculate",
-    "identifier" : "calculate",
-    "version" : "1.0",
-    "description" : "Operations with text values",
-    "authorEmail" : "diego.cano@chazzdesign.com",
-    "author" : "Chazz Design",
+  "name" : "Sketch Calculate",
+  "identifier" : "calculate",
+  "version" : "1.0",
+  "description" : "Operations with text values",
+  "authorEmail" : "diego.cano@chazzdesign.com",
+  "author" : "Chazz Design",
 
-    "commands" : [
-    {
-      "script" : "script.js",
-      "handler" : "calculate",
-      "shortcut" : "command shift c",
-      "name" : "Calculate values for all labels",
-      "identifier" : "calculate.calculate"
-    }    
+  "commands" : [
+  {
+    "script" : "script.js",
+    "handler" : "calculate",
+    "shortcut" : "command shift c",
+    "name" : "Calculate values for all labels",
+    "identifier" : "calculate.calculate"
+  },
+  {
+    "script" : "script.js",    
+    "handlers" : {
+      "actions": {
+        "TextChanged": "changedText"
+      }
+    },
+    "name" : "Update when layer text is changed",
+    "identifier" : "calculate.autocalculate-ontextchanged"
+  },
+  {
+    "script" : "script.js",    
+    "handlers" : {
+      "actions": {
+        "RenameLayer": "changedName"
+      }
+    },
+    "name" : "Update when layer name is changed",
+    "identifier" : "calculate.autocalculate-onlayernamechanged"
+  }
   ],
 }
