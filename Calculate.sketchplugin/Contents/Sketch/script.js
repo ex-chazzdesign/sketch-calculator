@@ -122,7 +122,7 @@ let doCommand = function (layer, command, values) {
 
   switch(command) {
     case COMMANDS.CONCAT: {
-      text = values.map((v) => v.value).join(' ');
+      text = values.map((v) => v.value).join('');
       break;
     }
     case COMMANDS.UPPER: {
