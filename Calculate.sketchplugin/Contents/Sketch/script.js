@@ -7,7 +7,7 @@ const REGEX = {
   COMMAND: /^=(.*?)\(.*?\)/  
 }
 
-const EVAL_WHITELIST  = '()1234567890+/*- ';
+const EVAL_WHITELIST  = '()1234567890+/*- ,';
 
 const COMMANDS = {
   CONCAT: 'CONCAT',
@@ -193,7 +193,7 @@ let showError = function (layer, e) {
   return;
 }
 
-var changedText = function (currentContext) {
+var changedText = function (currentContext) {  
   let layerName = Sketch.fromNative(currentContext.actionContext.layer).name;
   let currentPage = Sketch.getSelectedDocument().selectedPage;
   let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
@@ -220,7 +220,8 @@ let deepSearch = function(layers, layerName) {
   return foundLayers;
 }
 
-var changedName = function () {
-  console.log('Name changed!');
-  calculate();
+var changedName = function (currentContext) {  
+  //console.log('currentcontext', currentContext.actionContext);
+  //let context = Sketch.fromNative(currentContext.actionContext);
+  // calculate();
 }
