@@ -7,7 +7,7 @@ const REGEX = {
   COMMAND: /^=(.*?)\(.*?\)/  
 }
 
-const EVAL_WHITELIST  = '()1234567890+/*-';
+const EVAL_WHITELIST  = '()1234567890+/*- ';
 
 const COMMANDS = {
   CONCAT: 'CONCAT',
@@ -165,8 +165,8 @@ let doCalculation = function (layer, values) {
 }
 
 let whitelist = function(value) {
-  for (let i=0; i<value.length; i++) {
-    if (! EVAL_WHITELIST.includes(value[i])) {
+  for (let i = 0; i < value.length; i++) {
+    if (!EVAL_WHITELIST.includes(value[i])) {
       return false;
     }
   }
