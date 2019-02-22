@@ -39,8 +39,8 @@ The plugin also support a number of operation with strings:
 
 By default, layer names in formulas will be searched in the same artboard as the formula layer. But formulas can also include references to layers in other artboards by being referenced with a `*` before the name. For example:
 
-`={layer_1}` uses the value of `layer_1` layer in the same artboard.
-`={layer_1}` uses the value of the first `layer_1` layer that exists in any artboard of the document.
+1. `={layer_1}` uses the value of `layer_1` layer in the same artboard.
+2. `={*layer_1}` uses the value of the first `layer_1` layer that exists in any artboard of the document.
 
 # Caveats
 
