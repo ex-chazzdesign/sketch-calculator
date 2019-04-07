@@ -45,3 +45,4 @@ By default, layer names in formulas will be searched in the same artboard as the
 
 1. For the moment the plugin only works with "," as decimal separator.
 2. We haven't done any performance optimization yet, so it might be slow in complex documents.
+3. Right now elements need to be included in an artboard.
