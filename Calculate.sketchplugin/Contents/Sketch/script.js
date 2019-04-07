@@ -193,16 +193,6 @@ let showError = function (layer, e) {
   return;
 }
 
-var changedText = function (currentContext) {  
-  let layerName = Sketch.fromNative(currentContext.actionContext.layer).name;
-  let currentPage = Sketch.getSelectedDocument().selectedPage;
-  let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
-  foundLayers = foundLayers.concat(deepSearch(currentPage.layers, `{*${layerName}}`));
-
-  for (let i = 0; i < foundLayers.length; i++) {
-    processLayer(foundLayers[i]);
-  }
-}
 
 let deepSearch = function(layers, layerName) {
   let foundLayers = [];
@@ -220,8 +210,22 @@ let deepSearch = function(layers, layerName) {
   return foundLayers;
 }
 
+/*
+var changedText = function (currentContext) {  
+  let layerName = Sketch.fromNative(currentContext.actionContext.layer).name;
+  let currentPage = Sketch.getSelectedDocument().selectedPage;
+  let foundLayers = deepSearch(currentPage.layers, `{${layerName}}`);
+  foundLayers = foundLayers.concat(deepSearch(currentPage.layers, `{*${layerName}}`));
+
+  for (let i = 0; i < foundLayers.length; i++) {
+    processLayer(foundLayers[i]);
+  }
+}
+
 var changedName = function (currentContext) {  
   //console.log('currentcontext', currentContext.actionContext);
   //let context = Sketch.fromNative(currentContext.actionContext);
   // calculate();
 }
+
+*/

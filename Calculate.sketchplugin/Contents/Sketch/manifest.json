@@ -13,26 +13,5 @@
     "shortcut" : "command shift c",
     "name" : "Calculate values for all labels",
     "identifier" : "calculate.calculate"
-  },
-  {
-    "script" : "script.js",    
-    "handlers" : {
-      "actions": {
-        "TextChanged": "changedText"
-      }
-    },
-    "name" : "Update when layer text is changed",
-    "identifier" : "calculate.autocalculate-ontextchanged"
-  },
-  {
-    "script" : "script.js",    
-    "handlers" : {
-      "actions": {
-        "RenameLayer": "changedName"
-      }
-    },
-    "name" : "Update when layer name is changed",
-    "identifier" : "calculate.autocalculate-onlayernamechanged"
-  }
-  ],
+  } ],
 }
