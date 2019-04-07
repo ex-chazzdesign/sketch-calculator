@@ -10,7 +10,6 @@ Let's learn how it works with a simple example:
 2. Create a text layer named `layer_2` with the value `10`.
 3. Create a text layer named `={layer_1} + {layer_2}` with any value and run the plugin. 
 4. The value should be changed to `13`, the sum of `layer_1` and `layer_2`.
-5. Now, change the value of `layer_1` or `layer_2`. The last layer should be automatically recalculated.
 
 You can also use other arithmetic operations. 
 
